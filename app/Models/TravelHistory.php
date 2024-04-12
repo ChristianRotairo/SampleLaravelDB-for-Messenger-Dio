@@ -11,5 +11,6 @@ class TravelHistory extends Model
     protected $table = 'travel_histories';
 
     protected $fillable = [
+        'image',
         'description',];
 }
