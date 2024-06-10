@@ -14,15 +14,14 @@ class TravelHistoryController extends Controller
         if ($travel_histories->count() > 0) {
             return response()->json($travel_histories, 200);
         } else {
-            return response()->json(['message' => 'No travel history found']);
+            return response()->json(['message' => 'No travel history found'], 404);
         }
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // adjust max size as needed
+            'todo' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -32,26 +31,67 @@ class TravelHistoryController extends Controller
             ], 422);
         }
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-        }
-
         $travelHistory = TravelHistory::create([
-            'description' => $request->description,
-            'image' => $imagePath,
+            'todo' => $request->todo,
         ]);
 
         if ($travelHistory) {
             return response()->json([
                 'message' => 'Travel history added successfully',
                 'travel_history' => $travelHistory,
-                'image_url' => $imagePath ? asset($imagePath) : null,
             ], 200);
         } else {
             return response()->json([
                 'message' => 'Something went wrong'
             ], 500);
         }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'todo' => 'nullable',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 422,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $travelHistory = TravelHistory::find($id);
+
+        if (!$travelHistory) {
+            return response()->json([
+                'message' => 'Travel history not found'
+            ], 404);
+        }
+
+        $travelHistory->update([
+            'todo' => $request->todo,
+        ]);
+
+        return response()->json([
+            'message' => 'Travel history updated successfully',
+            'travel_history' => $travelHistory,
+        ], 200);
+    }
+
+    public function destroy($id)
+    {
+        $travelHistory = TravelHistory::find($id);
+
+        if (!$travelHistory) {
+            return response()->json([
+                'message' => 'Travel history not found'
+            ], 404);
+        }
+
+        $travelHistory->delete();
+
+        return response()->json([
+            'message' => 'Travel history deleted successfully'
+        ], 200);
     }
 }
